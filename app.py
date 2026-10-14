@@ -33,8 +33,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# إعداد مفتاح الذكاء الاصطناعي (يمكن وضعه هنا أو عبر Streamlit Secrets)
-# يمكنك الحصول على مفتاح مجاني من Google AI Studio
+# إعداد مفتاح الذكاء الاصطناعي في القائمة الجانبية
 st.sidebar.image("https://img.icons8.com/color/96/pharmacist.png", width=80)
 st.sidebar.title("PharmaAI Studio")
 api_key = st.sidebar.text_input("أدخل Google Gemini API Key:", type="password")
@@ -63,8 +62,10 @@ if menu == "🤖 محلل الأسئلة الذكي (AI Solver)":
         else:
             try:
                 genai.configure(api_key=api_key)
-                # استخدام نموذج جيميني الذكي لتحليل السؤال كصيدلي خبير
-                model = genai.GenerativeModel('gemini-1.5-flash', system_instruction="أنت صيدلي إكلينيكي خبير وأستاذ صيدلة. قم بتحليل أسئلة وحالات طلاب صيدلة بدقة، واشرح الإجابة بالتفصيل مع ذكر Mechanism of Action والتفاعلات الدوائية باللغة العربية.")
+                model = genai.GenerativeModel(
+                    model_name='gemini-1.5-flash',
+                    system_instruction="أنت صيدلي إكلينيكي خبير وأستاذ صيدلة. قم بتحليل أسئلة وحالات طلاب صيدلة بدقة، واشرح الإجابة بالتفصيل مع ذكر Mechanism of Action والتفاعلات الدوائية باللغة العربية."
+                )
                 
                 with st.spinner("جاري تحليل السؤال وصياغة الشرح الإكلينيكي..."):
                     response = model.generate_content(user_question)
