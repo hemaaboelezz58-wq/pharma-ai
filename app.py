@@ -1,5 +1,5 @@
 import streamlit as st
-import time
+import google.generativeai as genai
 
 # إعدادات صفحة الموقع
 st.set_page_config(
@@ -33,10 +33,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# القائمة الجانبية للتنقل بين أقسام الموقع
+# إعداد مفتاح الذكاء الاصطناعي (يمكن وضعه هنا أو عبر Streamlit Secrets)
+# يمكنك الحصول على مفتاح مجاني من Google AI Studio
 st.sidebar.image("https://img.icons8.com/color/96/pharmacist.png", width=80)
 st.sidebar.title("PharmaAI Studio")
-st.sidebar.markdown("مساعدك الذكي لكلية صيدلة.")
+api_key = st.sidebar.text_input("أدخل Google Gemini API Key:", type="password")
 
 menu = st.sidebar.selectbox(
     "اختر القسم:",
@@ -44,40 +45,36 @@ menu = st.sidebar.selectbox(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.info("💡 تم تطويره لخدمة طلاب كلية صيدلة.")
+st.sidebar.info("💡 تم تطويره لخدمة طلاب كلية صيدلة بالذكاء الاصطناعي التوليدي.")
 
-# 1. قسم محلل الأسئلة الذكي
+# 1. قسم محلل الأسئلة الذكي الحقيقي
 if menu == "🤖 محلل الأسئلة الذكي (AI Solver)":
     st.markdown('<p class="main-header">🔬 محلل أسئلة صيدلة بالذكاء الاصطناعي</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-text">صور سؤال الكويز أو الحالة الإكلينيكية، أو اكتبه، واحصل على الشرح الفوري.</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-text">اكتب أي سؤال صيدلي أو حالة إكلينيكية لتحليلها عبر الذكاء الاصطناعي الفوري.</p>', unsafe_allow_html=True)
     st.markdown("---")
 
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        user_question = st.text_area("اكتب نص السؤال الصيدلي أو الحالة هنا:", height=120, placeholder="مثلاً: ما هي ميكانيزم عمل الـ Beta-blockers؟")
-    
-    with col2:
-        st.write("أو ارفع صورة السؤال:")
-        uploaded_file = st.file_uploader("اختر صورة...", type=["jpg", "png", "jpeg"])
+    user_question = st.text_area("اكتب نص السؤال أو الحالة هنا:", height=120, placeholder="مثلاً: ما هي آلية عمل الأدوية الخافضة لضغط الدم من نوع ARBs؟")
 
-    if st.button("تحليل السؤال وشرح الإجابة 🚀"):
-        if not user_question and not uploaded_file:
-            st.warning("⚠️ من فضلك اكتب السؤال أو ارفع صورة أولاً!")
+    if st.button("تحليل السؤال بالذكاء الاصطناعي 🚀"):
+        if not api_key:
+            st.error("⚠️ من فضلك أدخل مفتاح الـ API الخاص بـ Gemini في القائمة الجانبية أولاً!")
+        elif not user_question.strip():
+            st.warning("⚠️ من فضلك اكتب السؤال أولاً!")
         else:
-            with st.spinner("جاري تحليل الأسئلة واستخراج المعلومات الصيدلانية..."):
-                time.sleep(2)
-            
-            st.success("✅ تم التحليل بنجاح!")
-            st.markdown("### 📋 النتيجة والتحليل الشامل:")
-            st.info("""
-            **📍 الإجابة النموذجية:**  
-            الخيار الصحيح هو المتعلق بغلق مستقبلات بيتا (Beta-1 Receptors) بصفة اختيارية.
-
-            **💡 الشرح الإكلينيكي (Mechanism of Action):**
-            * يقلل من النتاج القلبي وسرعة نبضات القلب (Heart Rate).
-            * يقلل إفراز الرنين من الكلى، مما يخفض ضغط الدم تدريجياً.
-            """)
+            try:
+                genai.configure(api_key=api_key)
+                # استخدام نموذج جيميني الذكي لتحليل السؤال كصيدلي خبير
+                model = genai.GenerativeModel('gemini-1.5-flash', system_instruction="أنت صيدلي إكلينيكي خبير وأستاذ صيدلة. قم بتحليل أسئلة وحالات طلاب صيدلة بدقة، واشرح الإجابة بالتفصيل مع ذكر Mechanism of Action والتفاعلات الدوائية باللغة العربية.")
+                
+                with st.spinner("جاري تحليل السؤال وصياغة الشرح الإكلينيكي..."):
+                    response = model.generate_content(user_question)
+                
+                st.success("✅ تم التحليل بنجاح بواسطة الذكاء الاصطناعي!")
+                st.markdown("### 📋 نتيجة التحليل والشرح:")
+                st.markdown(response.text)
+                
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {e}")
 
 # 2. قسم بنك الأسئلة والكويزات
 elif menu == "📚 بنك الأسئلة والكويزات":
