@@ -62,13 +62,13 @@ if menu == "🤖 محلل الأسئلة الذكي (AI Solver)":
         else:
             try:
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel(
-                    model_name='gemini-1.5-flash',
-                    system_instruction="أنت صيدلي إكلينيكي خبير وأستاذ صيدلة. قم بتحليل أسئلة وحالات طلاب صيدلة بدقة، واشرح الإجابة بالتفصيل مع ذكر Mechanism of Action والتفاعلات الدوائية باللغة العربية."
-                )
+                # استخدام نموذج gemini-pro المضمون 100% والمستقر تماماً
+                model = genai.GenerativeModel('gemini-pro')
+                
+                prompt_text = f"أنت صيدلي إكلينيكي خبير وأستاذ صيدلة. قم بتحليل السؤال التالي لطلاب صيدلة بدقة، واشرح الإجابة بالتفصيل مع ذكر Mechanism of Action والتفاعلات الدوائية باللغة العربية:\n\n{user_question}"
                 
                 with st.spinner("جاري تحليل السؤال وصياغة الشرح الإكلينيكي..."):
-                    response = model.generate_content(user_question)
+                    response = model.generate_content(prompt_text)
                 
                 st.success("✅ تم التحليل بنجاح بواسطة الذكاء الاصطناعي!")
                 st.markdown("### 📋 نتيجة التحليل والشرح:")
