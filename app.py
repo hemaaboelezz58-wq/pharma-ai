@@ -1,121 +1,70 @@
 import streamlit as st
 import google.generativeai as genai
 
-# إعدادات صفحة الموقع
+# إعداد صفحة الموقع
 st.set_page_config(
-    page_title="PharmaAI - مساعد صيدلة الذكي",
-    page_icon="💊",
-    layout="centered",
-    initial_sidebar_state="expanded"
+    page_title="PharmaAI Chatbot",
+    page_icon="🤖",
+    layout="centered"
 )
 
-# تصميم وتنسيق واجهة المستخدم (CSS مخصص)
-st.markdown("""
-    <style>
-    .main-header {
-        font-size: 28px;
-        color: #00796B;
-        font-weight: bold;
-        text-align: center;
-    }
-    .sub-text {
-        font-size: 15px;
-        color: #555555;
-        text-align: center;
-    }
-    .stButton>button {
-        background-color: #00796B;
-        color: white;
-        font-weight: bold;
-        border-radius: 8px;
-        width: 100%;
-    }
-    </style>
-""", unsafe_allow_html=True)
+st.title("🤖 PharmaAI - مساعد صيدلي ذكي")
+st.write("اسألني عن أي مادة، أدوية، تفاعلات دوائية، أو حالات إكلينيكية، وهرد عليك فوراً!")
 
-# إعداد مفتاح الذكاء الاصطناعي في القائمة الجانبية
-st.sidebar.image("https://img.icons8.com/color/96/pharmacist.png", width=80)
-st.sidebar.title("PharmaAI Studio")
-api_key = st.sidebar.text_input("أدخل Google Gemini API Key:", type="password")
-
-menu = st.sidebar.selectbox(
-    "اختر القسم:",
-    ["🤖 محلل الأسئلة الذكي (AI Solver)", "📚 بنك الأسئلة والكويزات", "💊 دليل الأدوية السريع (Drug Ref)"]
-)
-
-st.sidebar.markdown("---")
-st.sidebar.info("💡 تم تطويره لخدمة طلاب كلية صيدلة بالذكاء الاصطناعي التوليدي.")
-
-# 1. قسم محلل الأسئلة الذكي الحقيقي
-if menu == "🤖 محلل الأسئلة الذكي (AI Solver)":
-    st.markdown('<p class="main-header">🔬 محلل أسئلة صيدلة بالذكاء الاصطناعي</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-text">اكتب أي سؤال صيدلي أو حالة إكلينيكية لتحليلها عبر الذكاء الاصطناعي الفوري.</p>', unsafe_allow_html=True)
+# إدخال مفتاح الـ API في الشريط الجانبي
+with st.sidebar:
+    st.header("إعدادات الاتصال")
+    api_key = st.text_input("أدخل Google Gemini API Key:", type="password")
     st.markdown("---")
+    st.info("💡 احصل على المفتاح مجاناً من Google AI Studio.")
+    if st.button("مسح المحادثة"):
+        st.session_state.messages = []
+        st.rerun()
 
-    user_question = st.text_area("اكتب نص السؤال أو الحالة هنا:", height=120, placeholder="مثلاً: ما هي آلية عمل الأدوية الخافضة لضغط الدم من نوع ARBs؟")
-
-    if st.button("تحليل السؤال بالذكاء الاصطناعي 🚀"):
-        if not api_key:
-            st.error("⚠️ من فضلك أدخل مفتاح الـ API الخاص بـ Gemini في القائمة الجانبية أولاً!")
-        elif not user_question.strip():
-            st.warning("⚠️ من فضلك اكتب السؤال أولاً!")
-        else:
-            try:
-                genai.configure(api_key=api_key)
-                # استخدام نموذج gemini-pro المضمون 100% والمستقر تماماً
-                model = genai.GenerativeModel('gemini-pro')
-                
-                prompt_text = f"أنت صيدلي إكلينيكي خبير وأستاذ صيدلة. قم بتحليل السؤال التالي لطلاب صيدلة بدقة، واشرح الإجابة بالتفصيل مع ذكر Mechanism of Action والتفاعلات الدوائية باللغة العربية:\n\n{user_question}"
-                
-                with st.spinner("جاري تحليل السؤال وصياغة الشرح الإكلينيكي..."):
-                    response = model.generate_content(prompt_text)
-                
-                st.success("✅ تم التحليل بنجاح بواسطة الذكاء الاصطناعي!")
-                st.markdown("### 📋 نتيجة التحليل والشرح:")
-                st.markdown(response.text)
-                
-            except Exception as e:
-                st.error(f"حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {e}")
-
-# 2. قسم بنك الأسئلة والكويزات
-elif menu == "📚 بنك الأسئلة والكويزات":
-    st.markdown('<p class="main-header">📚 بنك أسئلة كلية صيدلة التفاعلي</p>', unsafe_allow_html=True)
-    st.markdown("اختر المادة وابدأ التدريب الفوري:")
-    st.markdown("---")
-
-    subject = st.selectbox("اختر المادة الدراسية:", ["الفارماكولوجي (Pharmacology)", "الكيمياء العضوية الصيدلية", "الصيدلانيات (Pharmaceutics)", "العقاقير (Pharmacognosy)"])
-
-    if subject:
-        st.subheader(f"اختبار سريع في: {subject}")
-        st.write("**السؤال 1:** أي من الأدوية التالية ينتمي إلى مجموعة الـ Biguanides ويستخدم خط أول لعلاج السكري النوع الثاني؟")
-        
-        answer = st.radio(
-            "اختر الإجابة الصحيحة:",
-            ["A) Insulin", "B) Metformin", "C) Glimepiride", "D) Sitagliptin"],
-            key="q1"
-        )
-        
-        if st.button("تحقق من الإجابة"):
-            if "B" in answer:
-                st.success("🎉 إجابة صحيحة! الميتفورمين (Metformin) هو خط العلاج الأول لمرضى السكري النوع الثاني.")
-            else:
-                st.error("❌ إجابة خاطئة. الإجابة الصحيحة هي B) Metformin.")
-
-# 3. قسم دليل الأدوية السريع
-elif menu == "💊 دليل الأدوية السريع (Drug Ref)":
-    st.markdown('<p class="main-header">💊 دليل الأدوية والمعلومات الدوائية</p>', unsafe_allow_html=True)
+if not api_key:
+    st.warning("⚠️ يرجى إدخال مفتاح الـ API في القائمة الجانبية لبدء المحادثة.")
+else:
+    genai.configure(api_key=api_key)
     
-    search_query = st.text_input("🔍 ابحث عن اسم الدواء أو المادة الفعالة:", placeholder="مثلاً: Aspirin, Paracetamol...")
+    # تهيئة نموذج الشات المستقر
+    model = genai.GenerativeModel('gemini-pro')
     
-    drugs_database = [
-        {"name": "Paracetamol (Acetaminophen)", "class": "Analgesic / Antipyretic", "dose": "500mg - 1g (Max 4g/day)", "uses": "مسكن للألم وخفض الحرارة."},
-        {"name": "Metformin", "class": "Antidiabetic (Biguanide)", "dose": "500mg - 2000mg daily", "uses": "السيطرة على مستويات السكر بالدم."},
-        {"name": "Aspirin", "class": "NSAID / Antiplatelet", "dose": "75mg - 325mg daily", "uses": "مسكن وحماية القلب ومنع التجلطات."},
-    ]
+    # تخزين رسائل المحادثة
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {"role": "model", "parts": ["أهلاً بك يا دكتور! أنا مساعدك الذكي المتخصص في علوم الصيدلة. كيف يمكنني مساعدتك اليوم؟"]}
+        ]
 
-    st.markdown("---")
-    for drug in drugs_database:
-        if search_query.lower() in drug["name"].lower() or search_query == "":
-            with st.expander(f"📌 {drug['name']} ({drug['class']})"):
-                st.write(f"**الجرعة الاعتيادية:** {drug['dose']}")
-                st.write(f"**الاستخدام الرئيسي:** {drug['uses']}")
+    # عرض سجل المحادثة
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["parts"][0])
+
+    # استقبال سؤال المستخدم
+    if user_input := st.chat_input("اكتب سؤالك هنا..."):
+        # إضافة سؤال المستخدم للسجل
+        st.session_state.messages.append({"role": "user", "parts": [user_input]})
+        with st.chat_message("user"):
+            st.markdown(user_input)
+
+        # توليد رد الذكاء الاصطناعي
+        with st.chat_message("model"):
+            with st.spinner("جاري التفكير والصياغة..."):
+                try:
+                    # تجهيز سياق صيدلي للمساعد
+                    chat_history = [
+                        {"role": m["role"], "parts": m["parts"]} 
+                        for m in st.session_state.messages[:-1]
+                    ]
+                    chat = model.start_chat(history=chat_history)
+                    
+                    prompt = f"باعتبارك صيدلي إكلينيكي خبير، أجب بدقة واحترافية باللغة العربية على التالي: {user_input}"
+                    response = chat.send_message(prompt)
+                    
+                    bot_reply = response.text
+                    st.markdown(bot_reply)
+                    
+                    # حفظ رد المساعد في السجل
+                    st.session_state.messages.append({"role": "model", "parts": [bot_reply]})
+                except Exception as e:
+                    st.error(f"حدث خطأ أثناء الاتصال: {e}")
